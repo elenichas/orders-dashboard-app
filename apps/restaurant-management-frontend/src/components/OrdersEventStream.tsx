@@ -21,7 +21,7 @@ interface OrderCardData {
   restaurantName?: string;
   deliveryTime?: string;
   status?: string;
-  deliveryPerson?: string;
+  driverName?: string;
 }
 
 const OrderEventStream: React.FC = () => {
@@ -31,8 +31,7 @@ const OrderEventStream: React.FC = () => {
 
   // State for filters
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>("");
-  const [selectedDeliveryPerson, setSelectedDeliveryPerson] =
-    useState<string>("");
+  const [selecteddriverName, setSelecteddriverName] = useState<string>("");
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -68,7 +67,7 @@ const OrderEventStream: React.FC = () => {
             order.orderId === event.orderId
               ? {
                   ...order,
-                  deliveryPerson: event.driverName,
+                  driverName: event.driverName,
                   deliveryTime: new Date(event.timestamp).toLocaleString(),
                 }
               : order
@@ -100,10 +99,9 @@ const OrderEventStream: React.FC = () => {
   const filteredOrderCards = orderCards.filter((order) => {
     const restaurantMatches =
       !selectedRestaurant || order.restaurantName === selectedRestaurant;
-    const deliveryPersonMatches =
-      !selectedDeliveryPerson ||
-      order.deliveryPerson === selectedDeliveryPerson;
-    return restaurantMatches && deliveryPersonMatches;
+    const driverNameMatches =
+      !selecteddriverName || order.driverName === selecteddriverName;
+    return restaurantMatches && driverNameMatches;
   });
 
   return (
@@ -111,12 +109,12 @@ const OrderEventStream: React.FC = () => {
       <h2 className="text-center text-xl font-bold mb-4">Live Feed</h2>
 
       {/* Filters */}
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex flex-col gap-4 items-start">
         {/* Restaurant Filter */}
         <select
           value={selectedRestaurant}
           onChange={(e) => setSelectedRestaurant(e.target.value)}
-          className="p-2 border rounded"
+          className="p-2 border rounded w-full"
         >
           <option value="">All Restaurants</option>
           {restaurants.map((restaurant) => (
@@ -128,18 +126,18 @@ const OrderEventStream: React.FC = () => {
 
         {/* Delivery Person Filter */}
         <select
-          value={selectedDeliveryPerson}
-          onChange={(e) => setSelectedDeliveryPerson(e.target.value)}
-          className="p-2 border rounded"
+          value={selecteddriverName}
+          onChange={(e) => setSelecteddriverName(e.target.value)}
+          className="p-2 border rounded w-full"
         >
           <option value="">All Delivery Persons</option>
           {[
             ...new Set(
-              orderCards.map((order) => order.deliveryPerson).filter(Boolean)
+              orderCards.map((order) => order.driverName).filter(Boolean)
             ),
-          ].map((deliveryPerson) => (
-            <option key={deliveryPerson} value={deliveryPerson}>
-              {deliveryPerson}
+          ].map((driverName) => (
+            <option key={driverName} value={driverName}>
+              {driverName}
             </option>
           ))}
         </select>
@@ -172,7 +170,7 @@ const OrderEventStream: React.FC = () => {
                   <tr>
                     <td className="font-bold">Out for Delivery:</td>
                     <td>{order.deliveryTime || "Pending"}</td>
-                    <td>{order.deliveryPerson || "N/A"}</td>
+                    <td>{order.driverName || "N/A"}</td>
                   </tr>
                   <tr>
                     <td className="font-bold">Status:</td>
