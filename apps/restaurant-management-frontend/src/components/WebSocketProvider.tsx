@@ -1,30 +1,15 @@
-import React, { createContext, ReactNode, useEffect, useState } from "react";
+import React, { createContext, ReactNode, useEffect } from "react";
+import store from "../store/store"; // Import Valtio store
 
-interface Order {
-  orderId: string;
-  timestamp: string;
-  kind: string;
-  restaurantId: string;
-  status?: string;
-}
-
-interface WebSocketContextProps {
-  orders: Order[];
-}
-
-export const WebSocketContext = createContext<WebSocketContextProps>({
-  orders: [],
-});
+// No need for `useState` or WebSocketContextProps here since we’re using Valtio
 
 const WebSocketProvider = ({ children }: { children: ReactNode }) => {
-  const [orders, setOrders] = useState<Order[]>([]);
-
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8014/ws");
 
     ws.onmessage = (event) => {
       const orderEvent = JSON.parse(event.data);
-      setOrders((prevOrders) => [...prevOrders, orderEvent]);
+      store.addOrder(orderEvent); // Use Valtio's addOrder to update orders in global store
     };
 
     return () => {
@@ -32,11 +17,7 @@ const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  return (
-    <WebSocketContext.Provider value={{ orders }}>
-      {children}
-    </WebSocketContext.Provider>
-  );
+  return <>{children}</>;
 };
 
 export default WebSocketProvider;

@@ -1,5 +1,6 @@
-import React, { useContext, useMemo } from "react";
-import { WebSocketContext } from "./WebSocketProvider";
+import React, { useMemo } from "react";
+import { useSnapshot } from "valtio";
+import store from "../store/store";
 import {
   Bar,
   BarChart,
@@ -63,7 +64,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const OrderStats: React.FC = () => {
-  const { orders } = useContext(WebSocketContext);
+  const { orders } = useSnapshot(store); // Use Valtio's useSnapshot to access orders
 
   // Use useMemo to format chart data only when orders change
   const chartData = useMemo(() => formatChartData(orders), [orders]);

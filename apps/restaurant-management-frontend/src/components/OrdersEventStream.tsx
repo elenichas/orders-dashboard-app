@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
-import { WebSocketContext } from "./WebSocketProvider";
+import React, { useEffect, useState } from "react";
+import { useSnapshot } from "valtio";
+import store from "../store/store"; // Import the Valtio store
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface OrderEvent {
@@ -25,15 +26,16 @@ interface OrderCardData {
 }
 
 const OrderEventStream: React.FC = () => {
-  const { orders } = useContext(WebSocketContext);
+  const { orders } = useSnapshot(store); // Get orders directly from Valtio store
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [orderCards, setOrderCards] = useState<OrderCardData[]>([]);
 
   // State for filters
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>("");
-  const [selecteddriverName, setSelecteddriverName] = useState<string>("");
+  const [selectedDriverName, setSelectedDriverName] = useState<string>("");
 
   useEffect(() => {
+    // Fetch restaurants data on component mount
     const fetchRestaurants = async () => {
       const response = await fetch("http://localhost:8014/restaurants");
       const data = await response.json();
@@ -92,6 +94,7 @@ const OrderEventStream: React.FC = () => {
       });
     };
 
+    // Update order cards each time a new order event arrives
     orders.forEach(handleNewEvent);
   }, [orders, restaurants]);
 
@@ -100,7 +103,7 @@ const OrderEventStream: React.FC = () => {
     const restaurantMatches =
       !selectedRestaurant || order.restaurantName === selectedRestaurant;
     const driverNameMatches =
-      !selecteddriverName || order.driverName === selecteddriverName;
+      !selectedDriverName || order.driverName === selectedDriverName;
     return restaurantMatches && driverNameMatches;
   });
 
@@ -126,8 +129,8 @@ const OrderEventStream: React.FC = () => {
 
         {/* Delivery Person Filter */}
         <select
-          value={selecteddriverName}
-          onChange={(e) => setSelecteddriverName(e.target.value)}
+          value={selectedDriverName}
+          onChange={(e) => setSelectedDriverName(e.target.value)}
           className="p-2 border rounded w-full"
         >
           <option value="">All Delivery Persons</option>

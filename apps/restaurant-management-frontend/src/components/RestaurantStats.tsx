@@ -1,5 +1,6 @@
-import React, { useContext, useMemo, useState, useEffect } from "react";
-import { WebSocketContext } from "./WebSocketProvider";
+import React, { useMemo, useState, useEffect } from "react";
+import { useSnapshot } from "valtio"; // Import Valtio hook
+import store from "../store/store"; // Import the Valtio store
 import { PieChart, Pie, Label, Tooltip } from "recharts";
 import {
   Card,
@@ -18,8 +19,14 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Rating" },
 ];
 
+interface Restaurant {
+  id: string;
+  name: string;
+  rating: number;
+}
+
 const RestaurantStats: React.FC = () => {
-  const { orders } = useContext(WebSocketContext);
+  const { orders } = useSnapshot(store); // Access orders directly from Valtio store
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
   // Fetch restaurant data from backend
@@ -38,7 +45,7 @@ const RestaurantStats: React.FC = () => {
 
   // State for sorting criteria and order
   const [sortCriterion, setSortCriterion] = useState("totalRevenue");
-  const [sortOrder, setSortOrder] = useState("desc"); // "asc" or "desc"
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const calculateStatsByRestaurant = () => {
     const restaurantData: Record<
@@ -182,8 +189,7 @@ const RestaurantStats: React.FC = () => {
               <CardHeader className="text-center">
                 <CardTitle className="flex justify-center items-center gap-1">
                   {restaurant.name} <span>{restaurant.rating}</span>
-                  <FaStar className="w-4 h-4 text-yellow-500" />{" "}
-                  {/* Filled star icon */}
+                  <FaStar className="w-4 h-4 text-yellow-500" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex justify-center">
