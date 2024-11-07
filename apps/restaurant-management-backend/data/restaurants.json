@@ -1,0 +1,47 @@
+[
+    {
+        "id": "pTPZmaQWRaWz/2Wft9+V+g",
+        "name": "Burger Rook",
+        "rating": 3.5
+    },
+    {
+        "id": "bF7/xp8IRTuMkKxVAjgulA",
+        "name": "Dumplings Plus",
+        "rating": 4.5
+    },
+    {
+        "id": "WUX9CzEYRWO7D9GOMOF0aQ",
+        "name": "Green Leaf",
+        "rating": 2.7
+    },
+    {
+        "id": "m3ZdGSMwT9u8JyaeWtPCDw",
+        "name": "QuickBite",
+        "rating": 4.7
+    },
+    {
+        "id": "HaZ+4YR+QH+wG1PeKp8mbg",
+        "name": "Ocean's Catch",
+        "rating": 3.4
+    },
+    {
+        "id": "415wKuYDREecmYGvpmKqyw",
+        "name": "Smokehouse BBQ",
+        "rating": 2.9
+    },
+    {
+        "id": "DP0dMrwTTl2a6Zr+4iFtiw",
+        "name": "The Deli Stop",
+        "rating": 4.9
+    },
+    {
+        "id": "aWLOx3wVQFChOxKVtRGnTw",
+        "name": "Noodle House",
+        "rating": 4.5
+    },
+    {
+        "id": "PSH0bvp1Ska0dRwVSjqmuQ",
+        "name": "Classic American Grill",
+        "rating": 4.4
+    }
+]
