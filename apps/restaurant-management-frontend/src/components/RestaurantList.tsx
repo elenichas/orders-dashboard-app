@@ -13,7 +13,7 @@ const RestaurantList: React.FC = () => {
 
   useEffect(() => {
     // Use fetch to retrieve restaurant data
-    fetch("/restaurants")
+    fetch("http://localhost:8014/restaurants")
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok");

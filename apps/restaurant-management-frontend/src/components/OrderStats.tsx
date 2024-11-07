@@ -1,10 +1,14 @@
-"use client";
-
 import React, { useContext, useMemo } from "react";
 import { WebSocketContext } from "./WebSocketProvider";
-import { TrendingUp } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from "recharts";
 import {
   Card,
   CardContent,
@@ -14,11 +18,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  ChartConfig,
   ChartContainer,
-  ChartTooltip,
   ChartTooltipContent,
+  ChartConfig,
 } from "@/components/ui/chart";
+import { TrendingUp } from "lucide-react";
 
 // Helper function to format orders data into chart data
 const formatChartData = (orders) => {
@@ -26,21 +30,21 @@ const formatChartData = (orders) => {
 
   orders.forEach((order) => {
     const date = new Date(order.timestamp).toLocaleDateString("en-US", {
+      day: "numeric",
       month: "short",
       year: "numeric",
     });
 
-    const existingEntry = data.find((entry) => entry.date === date);
+    let existingEntry = data.find((entry) => entry.date === date);
+    if (!existingEntry) {
+      existingEntry = { date, createdOrders: 0, cancelledOrders: 0 };
+      data.push(existingEntry);
+    }
 
-    if (existingEntry) {
-      existingEntry.totalOrders += 1;
-      if (order.kind === "orderDelivered") existingEntry.deliveredOrders += 1;
-    } else {
-      data.push({
-        date,
-        totalOrders: 1,
-        deliveredOrders: order.kind === "orderDelivered" ? 1 : 0,
-      });
+    if (order.kind === "orderCreated") {
+      existingEntry.createdOrders += 1;
+    } else if (order.kind === "orderCancelled") {
+      existingEntry.cancelledOrders += 1;
     }
   });
 
@@ -49,12 +53,12 @@ const formatChartData = (orders) => {
 
 const chartConfig = {
   totalOrders: {
-    label: "Total Orders",
-    color: "hsl(var(--chart-1))",
+    label: "Created Orders",
+    color: "#b5b5b5",
   },
-  deliveredOrders: {
-    label: "Delivered Orders",
-    color: "hsl(var(--chart-2))",
+  cancelledOrders: {
+    label: "Cancelled Orders",
+    color: "hsl(1.13deg 83.25% 62.55%)",
   },
 } satisfies ChartConfig;
 
@@ -68,54 +72,39 @@ const OrderStats: React.FC = () => {
     <Card>
       <CardHeader>
         <CardTitle>Order Statistics</CardTitle>
-        <CardDescription>Total and delivered orders over time</CardDescription>
+        <CardDescription>Created vs. Cancelled Orders by Day</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <AreaChart
+          <BarChart
             width={500}
             height={300}
             data={chartData}
             margin={{
-              left: 12,
-              right: 12,
+              top: 20,
+              right: 30,
+              left: 0,
+              bottom: 5,
             }}
           >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              interval={0} // Ensures one tick per date
-              tickFormatter={(value) => {
-                // Format the date as desired, e.g., "MM/DD" or "DD MMM"
-                const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "short",
-                });
-              }}
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip content={<ChartTooltipContent indicator="dot" />} />
+            <Legend />
+            <Bar
+              dataKey="createdOrders"
+              stackId="a"
+              fill="#b5b5b5"
+              name="Created Orders"
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" />}
+            <Bar
+              dataKey="cancelledOrders"
+              stackId="a"
+              fill="hsl(1.13deg 83.25% 62.55%)"
+              name="Cancelled Orders"
             />
-            <Area
-              dataKey="totalOrders"
-              type="monotone"
-              fill="var(--chart-1)"
-              fillOpacity={0.4}
-              stroke="var(--chart-1)"
-            />
-            <Area
-              dataKey="deliveredOrders"
-              type="monotone"
-              fill="var(--chart-2)"
-              fillOpacity={0.4}
-              stroke="var(--chart-2)"
-            />
-          </AreaChart>
+          </BarChart>
         </ChartContainer>
       </CardContent>
       <CardFooter>
@@ -124,8 +113,9 @@ const OrderStats: React.FC = () => {
             <div className="flex items-center gap-2 font-medium leading-none">
               Trending up by{" "}
               {(
-                ((chartData.at(-1)?.deliveredOrders || 0) /
-                  (chartData.at(-1)?.totalOrders || 1)) *
+                ((chartData.at(-1)?.createdOrders || 0) /
+                  (chartData.at(-1)?.createdOrders +
+                    chartData.at(-1)?.cancelledOrders || 1)) *
                 100
               ).toFixed(1)}
               % <TrendingUp className="h-4 w-4" />

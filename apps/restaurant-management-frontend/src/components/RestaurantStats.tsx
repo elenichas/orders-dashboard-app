@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { WebSocketContext } from "./WebSocketProvider";
+import { FaStar } from "react-icons/fa"; // Import filled star from react-icons
 
 interface Restaurant {
   restaurantId: string;
@@ -121,7 +122,10 @@ const RestaurantStats: React.FC = () => {
           return (
             <Card key={restaurant.id} className="my-4">
               <CardHeader className="text-center">
-                <CardTitle>{restaurant.name}</CardTitle>
+                <CardTitle className="flex justify-center items-center gap-1">
+                  {restaurant.name} <span>{restaurant.rating}</span>
+                  <FaStar className="w-4 h-4 text-yellow-500" />{" "}
+                </CardTitle>
                 <CardDescription>Total Orders and Revenue</CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center">
