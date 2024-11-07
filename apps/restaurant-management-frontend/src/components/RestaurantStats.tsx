@@ -1,6 +1,5 @@
-"use client";
-
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useMemo, useState, useEffect } from "react";
+import { WebSocketContext } from "./WebSocketProvider";
 import { PieChart, Pie, Label, Tooltip } from "recharts";
 import {
   Card,
@@ -10,13 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { WebSocketContext } from "./WebSocketProvider";
-import { FaStar } from "react-icons/fa"; // Import filled star from react-icons
+import { FaStar } from "react-icons/fa";
 
-interface Restaurant {
-  restaurantId: string;
-  name: string;
-}
+// Sort options
+const SORT_OPTIONS = [
+  { value: "totalRevenue", label: "Total Revenue" },
+  { value: "lostRevenue", label: "Lost Revenue" },
+  { value: "rating", label: "Rating" },
+];
 
 const RestaurantStats: React.FC = () => {
   const { orders } = useContext(WebSocketContext);
@@ -36,7 +36,10 @@ const RestaurantStats: React.FC = () => {
     fetchRestaurants();
   }, []);
 
-  // Helper function to calculate stats for each restaurant based on order events
+  // State for sorting criteria and order
+  const [sortCriterion, setSortCriterion] = useState("totalRevenue");
+  const [sortOrder, setSortOrder] = useState("desc"); // "asc" or "desc"
+
   const calculateStatsByRestaurant = () => {
     const restaurantData: Record<
       string,
@@ -48,16 +51,14 @@ const RestaurantStats: React.FC = () => {
         lostRevenue: number;
       }
     > = {};
-
     const orderMap: Record<
       string,
       { restaurantId: string; totalAmount: number; status: string }
     > = {};
 
-    orders.forEach((event: OrderEvent) => {
+    orders.forEach((event) => {
       const { orderId, kind, restaurantId, totalAmount } = event;
 
-      // Handle order creation by setting restaurant association
       if (kind === "orderCreated" && restaurantId) {
         orderMap[orderId] = {
           restaurantId,
@@ -76,7 +77,6 @@ const RestaurantStats: React.FC = () => {
         restaurantData[restaurantId].created += 1;
       }
 
-      // Update order status based on subsequent events
       if (orderMap[orderId]) {
         const { restaurantId } = orderMap[orderId];
 
@@ -100,11 +100,65 @@ const RestaurantStats: React.FC = () => {
 
   const restaurantStats = calculateStatsByRestaurant();
 
+  // Sorting function
+  const sortedRestaurants = useMemo(() => {
+    return [...restaurants].sort((a, b) => {
+      const statA = restaurantStats[a.id] || {
+        revenue: 0,
+        lostRevenue: 0,
+        rating: a.rating,
+      };
+      const statB = restaurantStats[b.id] || {
+        revenue: 0,
+        lostRevenue: 0,
+        rating: b.rating,
+      };
+
+      let valueA, valueB;
+      if (sortCriterion === "totalRevenue") {
+        valueA = statA.revenue;
+        valueB = statB.revenue;
+      } else if (sortCriterion === "lostRevenue") {
+        valueA = statA.lostRevenue;
+        valueB = statB.lostRevenue;
+      } else {
+        valueA = a.rating;
+        valueB = b.rating;
+      }
+
+      return sortOrder === "asc" ? valueA - valueB : valueB - valueA;
+    });
+  }, [restaurants, restaurantStats, sortCriterion, sortOrder]);
+
   return (
     <div className="restaurant-stats">
-      <h2>Restaurant Statistics</h2>
+      <h2 className="text-center text-xl font-bold mb-4">
+        Restaurant Statistics
+      </h2>
+
+      {/* Sorting Controls */}
+      <div className="flex justify-center gap-4 mb-4">
+        <select
+          value={sortCriterion}
+          onChange={(e) => setSortCriterion(e.target.value)}
+          className="p-2 border rounded"
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+          className="p-2 border rounded"
+        >
+          {sortOrder === "asc" ? "Ascending" : "Descending"}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {restaurants.map((restaurant) => {
+        {sortedRestaurants.map((restaurant, index) => {
           const stats = restaurantStats[restaurant.id] || {
             created: 0,
             delivered: 0,
@@ -120,21 +174,23 @@ const RestaurantStats: React.FC = () => {
           ];
 
           return (
-            <Card key={restaurant.id} className="my-4">
+            <Card key={restaurant.id} className="relative my-4">
+              {/* Index on the top left */}
+              <div className="absolute top-2 left-2 bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                {index + 1}
+              </div>
               <CardHeader className="text-center">
                 <CardTitle className="flex justify-center items-center gap-1">
                   {restaurant.name} <span>{restaurant.rating}</span>
                   <FaStar className="w-4 h-4 text-yellow-500" />{" "}
+                  {/* Filled star icon */}
                 </CardTitle>
-                <CardDescription>Total Orders and Revenue</CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center">
                 <PieChart width={250} height={250}>
-                  {/* Add Tooltip for hover effect */}
                   <Tooltip
                     formatter={(value, name) => [`${value}`, `${name} Orders`]}
                   />
-
                   <Pie
                     data={pieData}
                     dataKey="value"
