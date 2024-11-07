@@ -12,7 +12,7 @@ const Dashboard: React.FC = () => {
       <WebSocketProvider>
         <>
           <OrderStats />
-          <OrdersList />
+          {/* <OrdersList /> */}
           <RestaurantStats />
           <RestaurantList />
         </>

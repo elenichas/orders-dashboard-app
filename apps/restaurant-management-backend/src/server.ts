@@ -12,6 +12,18 @@ const allEvents: OrderEvent[] = JSON.parse(
 );
 
 const server = createServer((req, res) => {
+  // Add CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Handle preflight request
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   if (req.method == "GET" && req.url == "/restaurants") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(allRestaurants));
