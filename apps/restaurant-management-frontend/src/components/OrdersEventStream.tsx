@@ -33,14 +33,12 @@ const processOrderEvents = (
   let driverName: string | undefined;
   let deliveryTime: string | undefined;
   let status: string | undefined;
+
   const { kind } = events.at(-1) || { kind: "orderCreated" };
 
-  // Iterate through events in order and update details
   events.forEach((event) => {
     if (event.kind === "orderCreated") {
       createdTime = new Date(event.timestamp).toLocaleString();
-
-      // Find the restaurant name by matching restaurantId
       const restaurant = restaurants.find((r) => r.id === event.restaurantId);
       restaurantName = restaurant ? restaurant.name : "Unknown";
     } else if (event.kind === "orderEnRoute") {
@@ -56,7 +54,7 @@ const processOrderEvents = (
   });
 
   return {
-    orderId: events[0].orderId, // Ensure we use orderId from events
+    orderId: events[0].orderId,
     createdTime,
     restaurantName,
     driverName,
@@ -67,16 +65,14 @@ const processOrderEvents = (
 };
 
 const OrderEventStream: React.FC = () => {
-  const { orderEvents: orders } = useSnapshot(store); // Get orders directly from Valtio store
+  const { orderEvents: orders } = useSnapshot(store);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [orderCards, setOrderCards] = useState<OrderCardData[]>([]);
-
-  // State for filters
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>("");
   const [selectedDriverName, setSelectedDriverName] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<string>("desc");
 
   useEffect(() => {
-    // Fetch restaurants data on component mount
     const fetchRestaurants = async () => {
       const response = await fetch("http://localhost:8014/restaurants");
       const data = await response.json();
@@ -86,21 +82,26 @@ const OrderEventStream: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Process orders to create order cards
     const processedCards = Array.from(orders.entries()).map(
       ([orderId, events]) => processOrderEvents(events, restaurants)
     );
     setOrderCards(processedCards);
   }, [orders, restaurants]);
 
-  // Filtered order cards based on selected filters
-  const filteredOrderCards = orderCards.filter((order) => {
-    const restaurantMatches =
-      !selectedRestaurant || order.restaurantName === selectedRestaurant;
-    const driverNameMatches =
-      !selectedDriverName || order.driverName === selectedDriverName;
-    return restaurantMatches && driverNameMatches;
-  });
+  // Filtered and sorted order cards based on selected filters and sort order
+  const filteredOrderCards = orderCards
+    .filter((order) => {
+      const restaurantMatches =
+        !selectedRestaurant || order.restaurantName === selectedRestaurant;
+      const driverNameMatches =
+        !selectedDriverName || order.driverName === selectedDriverName;
+      return restaurantMatches && driverNameMatches;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.createdTime || "").getTime();
+      const dateB = new Date(b.createdTime || "").getTime();
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
 
   return (
     <div className="order-event-stream h-full w-full overflow-y-auto p-4 border-gray-200 text-xs">
@@ -108,6 +109,7 @@ const OrderEventStream: React.FC = () => {
 
       {/* Filters */}
       <div className="mb-4 flex flex-col gap-4 items-start">
+        {/* Restaurant Filter */}
         <select
           value={selectedRestaurant}
           onChange={(e) => setSelectedRestaurant(e.target.value)}
@@ -121,6 +123,7 @@ const OrderEventStream: React.FC = () => {
           ))}
         </select>
 
+        {/* Delivery Person Filter */}
         <select
           value={selectedDriverName}
           onChange={(e) => setSelectedDriverName(e.target.value)}
@@ -137,8 +140,19 @@ const OrderEventStream: React.FC = () => {
             </option>
           ))}
         </select>
+
+        {/* Sort Order Filter */}
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          className="p-2 border rounded w-full"
+        >
+          <option value="desc">Most Recent First</option>
+          <option value="asc">Oldest First</option>
+        </select>
       </div>
 
+      {/* Display filtered and sorted order cards */}
       {filteredOrderCards.map((order) => (
         <Card
           key={order.orderId}
