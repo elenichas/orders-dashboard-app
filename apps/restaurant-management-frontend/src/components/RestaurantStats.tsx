@@ -54,38 +54,55 @@ const RestaurantStats: React.FC = () => {
       }
     > = {};
 
-    // Iterate through each order's events
+    // Map to track each order's restaurantId and totalAmount from orderCreated events
+    const orderDetailsMap: Record<
+      string,
+      { restaurantId: string; totalAmount: number }
+    > = {};
+
     orderEvents.forEach((events, orderId) => {
-      let orderStatus = "created";
-      let totalAmount = 0;
-      let restaurantId = "";
-
-      // Process each event for this order
       events.forEach((event) => {
-        totalAmount = parseFloat(event.totalAmount || "0");
-        restaurantId = event.restaurantId || "";
+        if (event.kind === "orderCreated" && event.restaurantId) {
+          const totalAmount = parseFloat(event.totalAmount || "0");
 
-        // Initialize restaurant data if it doesn't exist
-        if (!restaurantData[restaurantId]) {
-          restaurantData[restaurantId] = {
-            created: 0,
-            delivered: 0,
-            cancelled: 0,
-            revenue: 0,
-            lostRevenue: 0,
+          // Store order details for future reference (for revenue or lost revenue)
+          orderDetailsMap[orderId] = {
+            restaurantId: event.restaurantId,
+            totalAmount,
           };
-        }
 
-        if (event.kind === "orderCreated") {
-          restaurantData[restaurantId].created += 1;
-        } else if (event.kind === "orderDelivered") {
-          orderStatus = "delivered";
-          restaurantData[restaurantId].delivered += 1;
-          restaurantData[restaurantId].revenue += totalAmount;
-        } else if (event.kind === "orderCancelled") {
-          orderStatus = "cancelled";
-          restaurantData[restaurantId].cancelled += 1;
-          restaurantData[restaurantId].lostRevenue += totalAmount;
+          // Initialize restaurant data if it doesn't exist
+          if (!restaurantData[event.restaurantId]) {
+            restaurantData[event.restaurantId] = {
+              created: 0,
+              delivered: 0,
+              cancelled: 0,
+              revenue: 0,
+              lostRevenue: 0,
+            };
+          }
+
+          // Increment the count of created orders for this restaurant
+          restaurantData[event.restaurantId].created += 1;
+        } else {
+          // Retrieve order details from the map for delivered/cancelled events
+          const orderDetails = orderDetailsMap[orderId];
+
+          if (orderDetails) {
+            const { restaurantId, totalAmount } = orderDetails;
+
+            // If the event is "orderDelivered", add to revenue
+            if (event.kind === "orderDelivered") {
+              restaurantData[restaurantId].delivered += 1;
+              restaurantData[restaurantId].revenue += totalAmount;
+            }
+
+            // If the event is "orderCancelled", add to lost revenue
+            if (event.kind === "orderCancelled") {
+              restaurantData[restaurantId].cancelled += 1;
+              restaurantData[restaurantId].lostRevenue += totalAmount;
+            }
+          }
         }
       });
     });
@@ -170,10 +187,6 @@ const RestaurantStats: React.FC = () => {
 
           return (
             <Card key={restaurant.id} className="relative my-4">
-              {/* Index on the top left */}
-              <div className="absolute top-2 left-2 bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                {index + 1}
-              </div>
               <CardHeader className="text-center">
                 <CardTitle className="flex justify-center items-center gap-1">
                   {restaurant.name} <span>{restaurant.rating}</span>
