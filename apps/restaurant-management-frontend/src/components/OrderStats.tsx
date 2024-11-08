@@ -23,33 +23,43 @@ import {
   ChartTooltipContent,
   ChartConfig,
 } from "@/components/ui/chart";
-import { TrendingUp } from "lucide-react";
+// import { TrendingUp } from "lucide-react";
+import type { OrderEvent } from "@repo/shared-types";
+import { format, startOfDay, parseISO } from "date-fns";
+
+const data = new Map<
+  string, // Use formatted day as 'MMM d' for unique key and display
+  { date: string; createdOrders: number; cancelledOrders: number }
+>();
 
 // Helper function to format orders data into chart data
-const formatChartData = (orders) => {
-  const data = [];
+const formatChartData = (orders: Map<string, OrderEvent[]>) => {
+  orders.forEach((orderEvents) => {
+    orderEvents.forEach((event) => {
+      // Parse the timestamp, normalize it to the start of the day, and format it
+      const day = format(startOfDay(parseISO(event.timestamp)), "MMM d");
 
-  orders.forEach((order) => {
-    const date = new Date(order.timestamp).toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+      if (data.has(day)) {
+        // console.log("add to existing entry", day);
+        const existingEntry = data.get(day)!;
+        if (event.kind === "orderCancelled") {
+          existingEntry.cancelledOrders += 1;
+        } else if (event.kind === "orderCreated") {
+          existingEntry.createdOrders += 1;
+        }
+      } else {
+        // console.log("create new entry", day);
+        // Add a new entry if it doesn't exist
+        data.set(day, {
+          date: day, // Store formatted day string
+          createdOrders: event.kind === "orderCreated" ? 1 : 0,
+          cancelledOrders: event.kind === "orderCancelled" ? 1 : 0,
+        });
+      }
     });
-
-    let existingEntry = data.find((entry) => entry.date === date);
-    if (!existingEntry) {
-      existingEntry = { date, createdOrders: 0, cancelledOrders: 0 };
-      data.push(existingEntry);
-    }
-
-    if (order.kind === "orderCreated") {
-      existingEntry.createdOrders += 1;
-    } else if (order.kind === "orderCancelled") {
-      existingEntry.cancelledOrders += 1;
-    }
   });
 
-  return data;
+  return Array.from(data.values());
 };
 
 const chartConfig = {
@@ -64,9 +74,8 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const OrderStats: React.FC = () => {
-  const { orders } = useSnapshot(store); // Use Valtio's useSnapshot to access orders
-
-  // Use useMemo to format chart data only when orders change
+  const { orderEvents } = useSnapshot(store);
+  const orders = orderEvents as Map<string, OrderEvent[]>;
   const chartData = useMemo(() => formatChartData(orders), [orders]);
 
   return (
@@ -111,7 +120,7 @@ const OrderStats: React.FC = () => {
       <CardFooter>
         <div className="flex w-full items-start gap-2 text-sm">
           <div className="grid gap-2">
-            <div className="flex items-center gap-2 font-medium leading-none">
+            {/* <div className="flex items-center gap-2 font-medium leading-none">
               Trending up by{" "}
               {(
                 ((chartData.at(-1)?.createdOrders || 0) /
@@ -120,7 +129,7 @@ const OrderStats: React.FC = () => {
                 100
               ).toFixed(1)}
               % <TrendingUp className="h-4 w-4" />
-            </div>
+            </div> */}
             <div className="flex items-center gap-2 leading-none text-muted-foreground">
               Orders from {chartData[0]?.date} - {chartData.at(-1)?.date}
             </div>

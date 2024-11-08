@@ -1,7 +1,5 @@
 import React, { createContext, ReactNode, useEffect } from "react";
-import store from "../store/store"; // Import Valtio store
-
-// No need for `useState` or WebSocketContextProps here since we’re using Valtio
+import { addOrUpdateOrderEvent } from "@/store/store";
 
 const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
@@ -9,7 +7,7 @@ const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
     ws.onmessage = (event) => {
       const orderEvent = JSON.parse(event.data);
-      store.addOrder(orderEvent); // Use Valtio's addOrder to update orders in global store
+      addOrUpdateOrderEvent(orderEvent);
     };
 
     return () => {
