@@ -29,8 +29,6 @@ import { format, startOfDay, parseISO } from "date-fns";
 
 // Helper function to format orders data into chart data
 const formatChartData = (orders: Map<string, OrderEvent[]>) => {
-  console.log("format", orders.size);
-
   const data = new Map<
     string, // Use formatted day as 'MMM d' for unique key and display
     { date: string; createdOrders: number; cancelledOrders: number }
@@ -47,7 +45,6 @@ const formatChartData = (orders: Map<string, OrderEvent[]>) => {
       //const day = format(startOfDay(parseISO(event.timestamp)), "MMM d");
 
       if (data.has(day)) {
-        console.log("add to existing entry", day);
         const existingEntry = data.get(day)!;
         if (event.kind === "orderCancelled") {
           existingEntry.cancelledOrders += 1;
@@ -55,7 +52,6 @@ const formatChartData = (orders: Map<string, OrderEvent[]>) => {
           existingEntry.createdOrders += 1;
         }
       } else {
-        console.log("create new entry", day);
         // Add a new entry if it doesn't exist
         data.set(day, {
           date: day, // Store formatted day string
