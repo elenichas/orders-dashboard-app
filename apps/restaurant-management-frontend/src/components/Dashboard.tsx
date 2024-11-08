@@ -7,14 +7,19 @@ import WebSocketProvider from "./WebSocketProvider";
 
 const Dashboard: React.FC = () => {
   return (
-    <div className="dashboard h-screen flex w-full">
+    <div className="dashboard w-screen h-screen flex box-border bg-gray-100">
       <WebSocketProvider>
-        <div className="w-1/4 h-full overflow-y-auto bg-gray-50 border-r border-gray-200">
+        {/* Left Sidebar */}
+        <div className="w-1/4 h-full overflow-y-auto bg-white border-r border-gray-200 p-4 rounded-md shadow-sm">
           <OrderEventStream />
         </div>
-        <div className="w-3/4 h-full overflow-y-auto p-4">
-          <OrderStats />
-          <RestaurantStats />
+
+        {/* Main Content Area */}
+        <div className="w-3/4 h-full overflow-y-auto">
+          <div className="space-y-6">
+            <OrderStats />
+            <RestaurantStats />
+          </div>
         </div>
       </WebSocketProvider>
     </div>
