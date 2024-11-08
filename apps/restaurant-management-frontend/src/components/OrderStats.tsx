@@ -23,14 +23,12 @@ import {
   ChartTooltipContent,
   ChartConfig,
 } from "@/components/ui/chart";
-// import { TrendingUp } from "lucide-react";
 import type { OrderEvent } from "@repo/shared-types";
-import { format, startOfDay, parseISO } from "date-fns";
 
 // Helper function to format orders data into chart data
 const formatChartData = (orders: Map<string, OrderEvent[]>) => {
   const data = new Map<
-    string, // Use formatted day as 'MMM d' for unique key and display
+    string,
     { date: string; createdOrders: number; cancelledOrders: number }
   >();
 
@@ -42,7 +40,6 @@ const formatChartData = (orders: Map<string, OrderEvent[]>) => {
         month: "short",
         year: "numeric",
       });
-      //const day = format(startOfDay(parseISO(event.timestamp)), "MMM d");
 
       if (data.has(day)) {
         const existingEntry = data.get(day)!;
@@ -54,7 +51,7 @@ const formatChartData = (orders: Map<string, OrderEvent[]>) => {
       } else {
         // Add a new entry if it doesn't exist
         data.set(day, {
-          date: day, // Store formatted day string
+          date: day,
           createdOrders: event.kind === "orderCreated" ? 1 : 0,
           cancelledOrders: event.kind === "orderCancelled" ? 1 : 0,
         });
@@ -79,8 +76,8 @@ const chartConfig = {
 const OrderStats: React.FC = () => {
   const { orderEvents: orders } = useSnapshot(store);
 
-  //const chartData = useMemo(() => formatChartData(orders), [orders]);
-  const chartData = [...formatChartData(orders)];
+  const chartData = useMemo(() => formatChartData(orders), [orders]);
+  // const chartData = [...formatChartData(orders)];
 
   return (
     <Card>
@@ -124,16 +121,6 @@ const OrderStats: React.FC = () => {
       <CardFooter>
         <div className="flex w-full items-start gap-2 text-sm">
           <div className="grid gap-2">
-            {/* <div className="flex items-center gap-2 font-medium leading-none">
-              Trending up by{" "}
-              {(
-                ((chartData.at(-1)?.createdOrders || 0) /
-                  (chartData.at(-1)?.createdOrders +
-                    chartData.at(-1)?.cancelledOrders || 1)) *
-                100
-              ).toFixed(1)}
-              % <TrendingUp className="h-4 w-4" />
-            </div> */}
             <div className="flex items-center gap-2 leading-none text-muted-foreground">
               Orders from {chartData[0]?.date} - {chartData.at(-1)?.date}
             </div>

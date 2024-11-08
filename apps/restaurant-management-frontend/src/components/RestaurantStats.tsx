@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FaStar } from "react-icons/fa";
-import type { OrderEvent, Restaurant } from "@repo/shared-types";
+import type { Restaurant } from "@repo/shared-types";
 
 // Sort options
 const SORT_OPTIONS = [
@@ -112,7 +112,7 @@ const RestaurantStats: React.FC = () => {
 
   const restaurantStats = calculateStatsByRestaurant();
 
-  // Sorting function
+  // Sorting logic for restaurants
   const sortedRestaurants = useMemo(() => {
     return [...restaurants].sort((a, b) => {
       const statA = restaurantStats[a.id] || {
@@ -148,7 +148,6 @@ const RestaurantStats: React.FC = () => {
         Restaurant Statistics
       </h2>
 
-      {/* Sorting Controls */}
       <div className="flex justify-center gap-4 mb-4">
         <select
           value={sortCriterion}
@@ -161,6 +160,7 @@ const RestaurantStats: React.FC = () => {
             </option>
           ))}
         </select>
+
         <button
           onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
           className="p-2 border rounded"

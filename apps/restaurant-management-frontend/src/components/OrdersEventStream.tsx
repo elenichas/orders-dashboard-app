@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSnapshot } from "valtio";
-import store from "../store/store"; // Import the Valtio store
+import store from "../store/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { OrderEvent, Restaurant } from "@repo/shared-types";
 
@@ -108,7 +108,6 @@ const OrderEventStream: React.FC = () => {
 
       {/* Filters */}
       <div className="mb-4 flex flex-col gap-4 items-start">
-        {/* Restaurant Filter */}
         <select
           value={selectedRestaurant}
           onChange={(e) => setSelectedRestaurant(e.target.value)}
@@ -122,7 +121,6 @@ const OrderEventStream: React.FC = () => {
           ))}
         </select>
 
-        {/* Delivery Person Filter */}
         <select
           value={selectedDriverName}
           onChange={(e) => setSelectedDriverName(e.target.value)}
@@ -141,7 +139,6 @@ const OrderEventStream: React.FC = () => {
         </select>
       </div>
 
-      {/* Display filtered order cards */}
       {filteredOrderCards.map((order) => (
         <Card
           key={order.orderId}
