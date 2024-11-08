@@ -58,3 +58,8 @@ npm install
 ```bash
 npm start
 ```
+### App screenshots
+![Vite + React + TS - Google Chrome 11_8_2024 1_56_52 PM](https://github.com/user-attachments/assets/531f3a2d-8b89-4cd3-8ab8-648c65e00b37)
+![Vite + React + TS - Google Chrome 11_8_2024 1_57_12 PM](https://github.com/user-attachments/assets/fbd113e7-ce85-4f56-a876-70db6397c9f5)
+
+
