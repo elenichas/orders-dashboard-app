@@ -1,16 +1,16 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useSnapshot } from "valtio"; // Import Valtio hook
-import store from "../store/store"; // Import the Valtio store
+import { useSnapshot } from "valtio";
+import store from "../store/store";
 import { PieChart, Pie, Label, Tooltip } from "recharts";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { FaStar } from "react-icons/fa";
+import type { OrderEvent, Restaurant } from "@repo/shared-types";
 
 // Sort options
 const SORT_OPTIONS = [
@@ -19,14 +19,8 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Rating" },
 ];
 
-interface Restaurant {
-  id: string;
-  name: string;
-  rating: number;
-}
-
 const RestaurantStats: React.FC = () => {
-  const { orders } = useSnapshot(store); // Access orders directly from Valtio store
+  const { orderEvents } = useSnapshot(store);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
   // Fetch restaurant data from backend
@@ -47,6 +41,7 @@ const RestaurantStats: React.FC = () => {
   const [sortCriterion, setSortCriterion] = useState("totalRevenue");
   const [sortOrder, setSortOrder] = useState("desc");
 
+  // Function to calculate stats by restaurant from orderEvents
   const calculateStatsByRestaurant = () => {
     const restaurantData: Record<
       string,
@@ -58,20 +53,19 @@ const RestaurantStats: React.FC = () => {
         lostRevenue: number;
       }
     > = {};
-    const orderMap: Record<
-      string,
-      { restaurantId: string; totalAmount: number; status: string }
-    > = {};
 
-    orders.forEach((event) => {
-      const { orderId, kind, restaurantId, totalAmount } = event;
+    // Iterate through each order's events
+    orderEvents.forEach((events, orderId) => {
+      let orderStatus = "created";
+      let totalAmount = 0;
+      let restaurantId = "";
 
-      if (kind === "orderCreated" && restaurantId) {
-        orderMap[orderId] = {
-          restaurantId,
-          totalAmount: parseFloat(totalAmount || "0"),
-          status: "created",
-        };
+      // Process each event for this order
+      events.forEach((event) => {
+        totalAmount = parseFloat(event.totalAmount || "0");
+        restaurantId = event.restaurantId || "";
+
+        // Initialize restaurant data if it doesn't exist
         if (!restaurantData[restaurantId]) {
           restaurantData[restaurantId] = {
             created: 0,
@@ -81,25 +75,19 @@ const RestaurantStats: React.FC = () => {
             lostRevenue: 0,
           };
         }
-        restaurantData[restaurantId].created += 1;
-      }
 
-      if (orderMap[orderId]) {
-        const { restaurantId } = orderMap[orderId];
-
-        if (kind === "orderDelivered") {
-          orderMap[orderId].status = "delivered";
+        if (event.kind === "orderCreated") {
+          restaurantData[restaurantId].created += 1;
+        } else if (event.kind === "orderDelivered") {
+          orderStatus = "delivered";
           restaurantData[restaurantId].delivered += 1;
-          restaurantData[restaurantId].revenue += orderMap[orderId].totalAmount;
-        }
-
-        if (kind === "orderCancelled") {
-          orderMap[orderId].status = "cancelled";
+          restaurantData[restaurantId].revenue += totalAmount;
+        } else if (event.kind === "orderCancelled") {
+          orderStatus = "cancelled";
           restaurantData[restaurantId].cancelled += 1;
-          restaurantData[restaurantId].lostRevenue +=
-            orderMap[orderId].totalAmount;
+          restaurantData[restaurantId].lostRevenue += totalAmount;
         }
-      }
+      });
     });
 
     return restaurantData;

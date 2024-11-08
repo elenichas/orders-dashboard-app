@@ -42,7 +42,7 @@ wss.on("connection", (ws: WebSocket) => {
     ws.send(JSON.stringify(event));
   };
 
-  const eventsToSendBySecond = 800;
+  const eventsToSendBySecond = 1000;
   const initialEvents = allEvents.length - eventsToSendBySecond;
 
   allEvents.slice(0, initialEvents).forEach((e) => sendEvent(e));
