@@ -27,20 +27,27 @@ import {
 import type { OrderEvent } from "@repo/shared-types";
 import { format, startOfDay, parseISO } from "date-fns";
 
-const data = new Map<
-  string, // Use formatted day as 'MMM d' for unique key and display
-  { date: string; createdOrders: number; cancelledOrders: number }
->();
-
 // Helper function to format orders data into chart data
 const formatChartData = (orders: Map<string, OrderEvent[]>) => {
+  console.log("format", orders.size);
+
+  const data = new Map<
+    string, // Use formatted day as 'MMM d' for unique key and display
+    { date: string; createdOrders: number; cancelledOrders: number }
+  >();
+
   orders.forEach((orderEvents) => {
     orderEvents.forEach((event) => {
       // Parse the timestamp, normalize it to the start of the day, and format it
-      const day = format(startOfDay(parseISO(event.timestamp)), "MMM d");
+      const day = new Date(event.timestamp).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+      //const day = format(startOfDay(parseISO(event.timestamp)), "MMM d");
 
       if (data.has(day)) {
-        // console.log("add to existing entry", day);
+        console.log("add to existing entry", day);
         const existingEntry = data.get(day)!;
         if (event.kind === "orderCancelled") {
           existingEntry.cancelledOrders += 1;
@@ -48,7 +55,7 @@ const formatChartData = (orders: Map<string, OrderEvent[]>) => {
           existingEntry.createdOrders += 1;
         }
       } else {
-        // console.log("create new entry", day);
+        console.log("create new entry", day);
         // Add a new entry if it doesn't exist
         data.set(day, {
           date: day, // Store formatted day string
@@ -63,7 +70,7 @@ const formatChartData = (orders: Map<string, OrderEvent[]>) => {
 };
 
 const chartConfig = {
-  totalOrders: {
+  createdOrders: {
     label: "Created Orders",
     color: "#b5b5b5",
   },
@@ -74,9 +81,10 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const OrderStats: React.FC = () => {
-  const { orderEvents } = useSnapshot(store);
-  const orders = orderEvents as Map<string, OrderEvent[]>;
-  const chartData = useMemo(() => formatChartData(orders), [orders]);
+  const { orderEvents: orders } = useSnapshot(store);
+
+  //const chartData = useMemo(() => formatChartData(orders), [orders]);
+  const chartData = [...formatChartData(orders)];
 
   return (
     <Card>
@@ -104,15 +112,15 @@ const OrderStats: React.FC = () => {
             <Legend />
             <Bar
               dataKey="createdOrders"
-              stackId="a"
               fill="#b5b5b5"
               name="Created Orders"
+              stackId="a"
             />
             <Bar
               dataKey="cancelledOrders"
-              stackId="a"
               fill="hsl(1.13deg 83.25% 62.55%)"
               name="Cancelled Orders"
+              stackId="a"
             />
           </BarChart>
         </ChartContainer>
